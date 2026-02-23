@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: SpotifyToYoutubeMP3
+Version: 1.0
+Summary: An application that gets your Spotify songs and downloads the YoutubeMP3 version
+Author: Brandon Gaona
+Author-email: brandon.gaona@outlook.com
+Keywords: web flask
+Requires-Dist: flask
+Requires-Dist: spotipy
+Requires-Dist: html5lib
+Requires-Dist: requests
+Requires-Dist: requests_html
+Requires-Dist: beautifulsoup4
+Requires-Dist: youtube_dl
+Requires-Dist: pathlib
+Requires-Dist: pandas
+Dynamic: author
+Dynamic: author-email
+Dynamic: keywords
+Dynamic: requires-dist
+Dynamic: summary
