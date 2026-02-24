@@ -1,4 +1,4 @@
-from flask import Flask, request, url_for, session, redirect
+from flask import Flask, request, url_for, session, redirect, render_template
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -20,15 +20,9 @@ GOOGLE_CLIENT_SECRETS_FILE = "google_client_secret.json"
 
 @app.route("/home")
 def home():
-    return """
-    <h2>Spotify → YouTube Playlist</h2>
-    <ul>
-      <li><a href="/spotify/login">Login with Spotify</a></li>
-      <li><a href="/youtube/login">Login with YouTube</a></li>
-      <li><a href="/sync">Create YouTube playlist from Spotify liked songs</a></li>
-      <li><a href="/getTracks">Show Spotify track count</a></li>
-    </ul>
-    """
+    spotify_ok = TOKEN_INFO in session
+    youtube_ok = YOUTUBE_TOKEN_INFO in session
+    return render_template("home.html", spotify_ok=spotify_ok, youtube_ok=youtube_ok)
 
 @app.route("/")
 def index():
@@ -103,33 +97,48 @@ def youtube_callback():
     if TOKEN_INFO not in session:
         return redirect(url_for("spotify_login", _external=True))
     
-    return redirect(url_for("sync_playlist"))
+    return redirect(url_for("sync_page"))
 
-@app.route("/sync")
-def sync_playlist():
-    # 1) Spotify auth
+@app.route("/sync", methods=["GET", "POST"])
+def sync_page():
+    if request.method == "GET":
+        return redirect(url_for("home"))
+
+    # read form inputs
+    title = request.form.get("title", "Spotify Liked Songs (Auto)").strip()
+    privacy = request.form.get("privacy", "private").strip()
+    limit = request.form.get("limit", "25").strip()
+
+    try:
+        limit = max(1, min(200, int(limit)))
+    except:
+        limit = 25
+
+    # Require both auth
+    if TOKEN_INFO not in session:
+        return redirect(url_for("spotify_login", _external=True))
+    if YOUTUBE_TOKEN_INFO not in session:
+        return redirect(url_for("youtube_login", _external=True))
+
+    # Spotify
     token_info = get_token()
     sp = spotipy.Spotify(auth=token_info["access_token"])
-    track_queries = get_saved_track_queries(sp)
+    track_queries = get_saved_track_queries(sp)[:limit]
 
-    # limit for quota + testing
-    track_queries = track_queries[:25]
-
-    # 2) YouTube auth
+    # YouTube
     yt = youtube_service()
 
-    # 3) Create playlist
-    playlist_title = "Spotify Liked Songs (Auto)"
+    # Create playlist
     playlist = yt.playlists().insert(
         part="snippet,status",
         body={
-            "snippet": {"title": playlist_title, "description": "Created from Spotify liked songs"},
-            "status": {"privacyStatus": "private"},
+            "snippet": {"title": title, "description": "Created from Spotify liked songs"},
+            "status": {"privacyStatus": privacy},
         }
     ).execute()
     playlist_id = playlist["id"]
 
-    # 4) Search + add
+    # Search + add
     added = 0
     skipped = 0
     for q in track_queries:
@@ -157,13 +166,18 @@ def sync_playlist():
         ).execute()
         added += 1
 
-    return {
-        "playlist_id": playlist_id,
-        "added": added,
-        "skipped": skipped,
-        "open_playlist": f"https://www.youtube.com/playlist?list={playlist_id}",
-        "note": "Playlist is private. Open the open_playlist link while logged into the same YouTube account."
-    }
+    playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
+    spotify_ok = True
+    youtube_ok = True
+    return render_template(
+        "result.html",
+        spotify_ok=spotify_ok,
+        youtube_ok=youtube_ok,
+        playlist_id=playlist_id,
+        playlist_url=playlist_url,
+        added=added,
+        skipped=skipped
+    )
 
 def get_saved_track_queries(sp):
     queries = []

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Home • Spotify → YouTube{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h3 mb-2">Create a YouTube playlist from Spotify liked songs</h1>
+          <p class="text-muted mb-4">
+            Connect Spotify, connect YouTube, then generate a private YouTube playlist from your saved tracks.
+          </p>
+
+          <div class="d-grid gap-2 d-md-flex">
+            <a class="btn btn-success btn-lg" href="{{ url_for('spotify_login') }}">
+              1) Connect Spotify
+            </a>
+
+            <a class="btn btn-danger btn-lg" href="{{ url_for('youtube_login') }}">
+              2) Connect YouTube
+            </a>
+
+            <a class="btn btn-primary btn-lg ms-md-auto {% if not (spotify_ok and youtube_ok) %}disabled{% endif %}"
+               href="{{ url_for('sync_page') }}">
+              3) Create Playlist
+            </a>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Playlist Title</label>
+              <input class="form-control" form="syncForm" name="title" value="Spotify Liked Songs (Auto)">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Max Songs</label>
+              <input class="form-control" form="syncForm" name="limit" value="25" type="number" min="1" max="200">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Privacy</label>
+              <select class="form-select" form="syncForm" name="privacy">
+                <option value="private" selected>private</option>
+                <option value="unlisted">unlisted</option>
+                <option value="public">public</option>
+              </select>
+            </div>
+          </div>
+
+          <form id="syncForm" method="post" action="{{ url_for('sync_page') }}" class="mt-3">
+            <button class="btn btn-primary btn-lg w-100 {% if not (spotify_ok and youtube_ok) %}disabled{% endif %}">
+              Create Playlist Now
+            </button>
+            <div class="mt-2">
+              <small class="muted">Tip: Start with 25 songs to avoid quota issues while testing.</small>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <a class="btn btn-outline-secondary" href="{{ url_for('getTracks') }}">Check Spotify track count</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

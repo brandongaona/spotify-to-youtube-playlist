@@ -1,0 +1,23 @@
+:root {
+  --radius: 16px;
+}
+
+body {
+  background: #f6f7fb;
+}
+
+.card {
+  border-radius: var(--radius);
+}
+
+.btn, .form-control, .form-select {
+  border-radius: 12px;
+}
+
+.badge {
+  border-radius: 999px;
+}
+
+small.muted {
+  color: #6c757d;
+}

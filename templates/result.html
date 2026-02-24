@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Result • Spotify → YouTube{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <h1 class="h3 mb-2">Playlist created ✅</h1>
+          <p class="text-muted">Your playlist was created and videos were added automatically.</p>
+
+          <div class="alert alert-info">
+            <div><b>Added:</b> {{ added }}</div>
+            <div><b>Skipped:</b> {{ skipped }}</div>
+            <div class="mt-2"><b>Playlist ID:</b> <code>{{ playlist_id }}</code></div>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-primary btn-lg" href="{{ playlist_url }}" target="_blank" rel="noopener">
+              Open Playlist on YouTube
+            </a>
+            <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('home') }}">
+              Back Home
+            </a>
+          </div>
+
+          <p class="text-muted small mt-3 mb-0">
+            Note: If the playlist looks empty, confirm you’re logged into the same YouTube account.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
