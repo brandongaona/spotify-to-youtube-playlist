@@ -1,15 +1,15 @@
 from setuptools import setup, find_packages
 
 requires = [
-    'flask',
-    'spotipy',
-    'html5lib',
-    'requests',
-    'requests_html',
-    'beautifulsoup4',
-    'youtube_dl',
-    'pathlib',
-    'pandas'
+    "flask",
+    "spotipy",
+    "requests",
+    "beautifulsoup4",
+    "pandas",
+    "google-api-python-client",
+    "google-auth",
+    "google-auth-oauthlib",
+    "google-auth-httplib2",
 ]
 
 setup(

@@ -7,6 +7,8 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 app = Flask(__name__)
 
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-only-secret")
@@ -21,7 +23,7 @@ def home():
     return """
     <h2>Spotify → YouTube Playlist</h2>
     <ul>
-      <li><a href="/">Login with Spotify</a></li>
+      <li><a href="/spotify/login">Login with Spotify</a></li>
       <li><a href="/youtube/login">Login with YouTube</a></li>
       <li><a href="/sync">Create YouTube playlist from Spotify liked songs</a></li>
       <li><a href="/getTracks">Show Spotify track count</a></li>
@@ -67,6 +69,10 @@ def getTracks():
 
 @app.route("/youtube/login")
 def youtube_login():
+    # Require Spotify first
+    if TOKEN_INFO not in session:
+        return redirect(url_for("spotify_login", _external=True))
+
     flow = create_youtube_flow()
     auth_url, state = flow.authorization_url(
         access_type="offline",
@@ -82,7 +88,7 @@ def youtube_callback():
     if not state:
         return "Missing OAuth state. Try /youtube/login again.", 400
 
-    flow = create_youtube_flow()
+    flow = create_youtube_flow(state=state)
     flow.fetch_token(authorization_response=request.url)
 
     creds = flow.credentials
@@ -94,6 +100,9 @@ def youtube_callback():
         "client_secret": creds.client_secret,
         "scopes": creds.scopes,
     }
+    if TOKEN_INFO not in session:
+        return redirect(url_for("spotify_login", _external=True))
+    
     return redirect(url_for("sync_playlist"))
 
 @app.route("/sync")
@@ -172,11 +181,12 @@ def get_saved_track_queries(sp):
         offset += 50
     return queries
 
-def create_youtube_flow():
+def create_youtube_flow(state=None):
     return Flow.from_client_secrets_file(
         GOOGLE_CLIENT_SECRETS_FILE,
         scopes=YOUTUBE_SCOPES,
         redirect_uri=os.getenv("YOUTUBE_REDIRECT_URI"),
+        state=state,
     )
 
 def get_youtube_credentials():
